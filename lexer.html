@@ -1,10 +1,96 @@
 <!--
  * @Author: your name
  * @Date: 2021-05-24 23:42:53
- * @LastEditTime: 2021-05-24 23:43:01
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-06-01 00:42:08
+ * @LastEditors: Tian
  * @Description: In User Settings Edit
  * @FilePath: /ToyJs/lexer.html
 -->
 
+<pre>
+<script>
 
+    class XRegexp {
+        constructor(source, flag, root='root'){
+            this.table = new Map();
+            this.regexp = new RegExp(this.compileRegexp(source, root, 0).source, flag);
+            console.log(this.regexp);
+            console.log(this.table)
+        }
+        compileRegexp(source, name, start) {
+            if(source[name] instanceof RegExp){
+                return {
+                    source: source[name],
+                    length: 0 
+                }
+            }
+            let length = 0;
+            let regexp = source[name].replace(/\<([^\>]+)\>/g, (str, $1) => {
+                this.table.set(start+length, $1);
+                this.table.set($1, start+length);
+                ++length;
+                let r = this.compileRegexp(source, $1, start+length);
+                length += r.length;
+                return "(" + r.source + ")";
+            })
+            return {
+                source: regexp,
+                length: length
+            };
+        }
+
+        exec(str){
+            let r = this.regexp.exec(str);
+            console.log(r);
+        }
+        get lastIndex(){
+            return this.regexp.lastIndex;
+        }
+        set lastIndex(value){
+            return this.regexp.lastIndex = value
+        }
+    }
+
+
+
+
+
+
+
+    function scan(str) {
+        let regexp = new XRegexp({
+            InputElement: "<WhiteSpace>|<LineTerminator>|<Comments>|<Token>",
+            WhiteSpace: / /,
+            LineTerminator: /\n/,
+            Comments: /\/\*(?:[^*]|\*[^\/])*\*\/|\/\/[^\n]*/,
+            Token: "<Literal>|<Keywords>|<Identifer>|<Punctuator>",
+            Literal: "<NumberLiteral>|<BooleanLiteral>|<StringLiteral>|<NullLiteral>",
+            NumberLiteral: /([1-9][0-9]*|0)(\.[0-9]+)?|\.[0-9]+/,
+            BooleanLiteral: /true|false/,
+            StringLiteral: /\"([^"\n]|\\[\s\S])*\"|\'([^"\n]|\\[\s\S])*\'/,
+            NullLiteral: /null/,
+            Identifer: /[a-zA-Z_$][a-zA-Z0-9_$]*/,
+            Keywords: /if|else|for|function|else|while|with|let/,
+            Punctuator: /\+|\,|\?|\:|\{|\}|\.|\(|\=|<|\+\+|==|\)|==>|\*|\[|\]/
+        }, 'g',  'InputElement')
+        while (regexp.lastIndex < str.length) {
+            let r = regexp.exec(str);
+        }
+    }
+
+    scan(`
+        for(let i = 0; i < 3; i++){
+            for(let j = 3; j < 3; j++){
+                let cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.innerText = pattern[i * 3 + j] == 2 : 
+                        pattern[i * 3 + j] == 1 ? "Hello" : "World" ;
+                cell.addEventListener('click', () => {
+                    userMove(i, j);
+                })
+                board.appendChild(document.createElement('br'));
+            }
+        }
+    `)
+</script>
+</pre>

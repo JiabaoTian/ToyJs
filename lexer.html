@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2021-05-24 23:42:53
- * @LastEditTime: 2021-06-01 00:42:08
+ * @LastEditTime: 2021-06-06 23:44:50
  * @LastEditors: Tian
  * @Description: In User Settings Edit
  * @FilePath: /ToyJs/lexer.html
@@ -20,15 +20,17 @@
         compileRegexp(source, name, start) {
             if(source[name] instanceof RegExp){
                 return {
-                    source: source[name],
+                    source: source[name].source,
                     length: 0 
                 }
             }
             let length = 0;
             let regexp = source[name].replace(/\<([^\>]+)\>/g, (str, $1) => {
                 this.table.set(start+length, $1);
-                this.table.set($1, start+length);
+                // this.table.set($1, start+length);
                 ++length;
+
+                
                 let r = this.compileRegexp(source, $1, start+length);
                 length += r.length;
                 return "(" + r.source + ")";
@@ -41,7 +43,14 @@
 
         exec(str){
             let r = this.regexp.exec(str);
-            console.log(r);
+            for(let i = 1; i < r.length; i++){
+                if(r[i] !== (void 0)){
+                    r[this.table.get(i-1)] = r[i];
+                }
+            }
+
+            // console.log(JSON.stringify(r[0]));
+            return r;
         }
         get lastIndex(){
             return this.regexp.lastIndex;
@@ -65,9 +74,9 @@
             Comments: /\/\*(?:[^*]|\*[^\/])*\*\/|\/\/[^\n]*/,
             Token: "<Literal>|<Keywords>|<Identifer>|<Punctuator>",
             Literal: "<NumberLiteral>|<BooleanLiteral>|<StringLiteral>|<NullLiteral>",
-            NumberLiteral: /([1-9][0-9]*|0)(\.[0-9]+)?|\.[0-9]+/,
+            NumberLiteral: /(?:[1-9][0-9]*|0)(?:\.[0-9]+)?|\.[0-9]+/,
             BooleanLiteral: /true|false/,
-            StringLiteral: /\"([^"\n]|\\[\s\S])*\"|\'([^"\n]|\\[\s\S])*\'/,
+            StringLiteral: /\"(?:[^"\n]|\\[\s\S])*\"|\'(?:[^"\n]|\\[\s\S])*\'/,
             NullLiteral: /null/,
             Identifer: /[a-zA-Z_$][a-zA-Z0-9_$]*/,
             Keywords: /if|else|for|function|else|while|with|let/,
@@ -75,6 +84,10 @@
         }, 'g',  'InputElement')
         while (regexp.lastIndex < str.length) {
             let r = regexp.exec(str);
+            console.log(r);
+            if(!r[0].length){
+                break;
+            }
         }
     }
 
